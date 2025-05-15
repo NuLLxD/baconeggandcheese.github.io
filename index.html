@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bacon Egg and Cheese</title>
+  <style>
+    body {
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      font-family: sans-serif;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+    }
+    iframe {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <img src="bec.jpg" alt="Bacon Egg and Cheese Sandwich">
+
+  <iframe id="ytplayer" width="0" height="0" 
+    src="https://www.youtube.com/embed/c9xFhRSh76U?enablejsapi=1&start=47&autoplay=1&mute=0" 
+    frameborder="0" allow="autoplay" allowfullscreen>
+  </iframe>
+
+  <script>
+    // YouTube IFrame Player API
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    var player;
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('ytplayer', {
+        events: {
+          'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange
+        }
+      });
+    }
+
+    function onPlayerReady(event) {
+      event.target.setVolume(100);
+      event.target.playVideo();
+    }
+
+    function onPlayerStateChange(event) {
+      if (event.data === YT.PlayerState.ENDED) {
+        player.seekTo(47);
+        player.playVideo();
+      }
+    }
+  </script>
+</body>
+</html>
