@@ -2,105 +2,50 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Bacon Egg and Cheese</title>
-  <style>
-    :root {
-      --bg-light: #ffffff;
-      --bg-dark: #121212;
-      --text-light: #000000;
-      --text-dark: #ffffff;
-    }
-
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background-color: var(--bg-light);
-      color: var(--text-light);
-      transition: background-color 0.3s, color 0.3s;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      body {
-        background-color: var(--bg-dark);
-        color: var(--text-dark);
-      }
-    }
-
-    img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 12px;
-    }
-
-    #toggleButton {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      border: none;
-      border-radius: 8px;
-      background-color: #f1c40f;
-      color: #000;
-      transition: background-color 0.3s;
-    }
-
-    #toggleButton:hover {
-      background-color: #d4ac0d;
-    }
-
-    #player {
-      display: none;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>baconeggandcheese</title>
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <img src="bec.jpg" alt="Bacon Egg and Cheese Sandwich">
-  <button id="toggleButton">Yerrrr</button>
-  <div id="player"></div>
+  <!-- navbar -->
+<div id="navbar">
+  <div id="navbar-left">
+    <div id="logo">
+      <img src="./logo.jpg" alt="Logo">
+    </div>
+    <div class="menu">
+      <div class="dropdown">Main
+        <div class="dropdown-content">
+          <a href="#" onclick="createCoplandWindow('Resume', './resume.html')">Resume</a>
+          <a href="#" onclick="createCoplandWindow('Bio', './bio.html')">Bio</a>
+        </div>
+      </div>
+      <div class="dropdown">Terminal
+        <div class="dropdown-content">
+          <a href="#" onclick="createCoplandWindow('Terminal', './terminal.html')">Launch Terminal</a>
+        </div>
+      </div>
+      <div class="dropdown">Contact
+        <div class="dropdown-content">
+          <a href="mailto:chris@baconeggandchee.se">Email</a>
+          <a href="https://www.linkedin.com/in/christopher-rodriguez-a4022a116/" target="_blank">LinkedIn</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="clock"></div>
+      </div>
+    </div>
+  </div>
 
-  <script>
-    // YT API
-    var tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    var firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+  <!-- Why does my clock break when I put stuff here? -->
+  <div id="content">
+    <!-- Saving this for later -->
+  </div>
 
-    let player;
-    let isPlaying = false;
+  <!-- Container for window script -->
+  <div id="window-container"></div>
 
-    function onYouTubeIframeAPIReady() {
-      player = new YT.Player('player', {
-        height: '0',
-        width: '0',
-        videoId: 'c9xFhRSh76U',
-        playerVars: {
-          start: 47,
-          loop: 1,
-          playlist: 'c9xFhRSh76U'
-        }
-      });
-    }
-
-    const button = document.getElementById('toggleButton');
-
-    button.addEventListener('click', () => {
-      if (!player) return;
-      const state = player.getPlayerState();
-      if (state === YT.PlayerState.PLAYING) {
-        player.pauseVideo();
-        button.textContent = "Yerrrr";
-        isPlaying = false;
-      } else {
-        player.playVideo();
-        button.textContent = "Pause!";
-        isPlaying = true;
-      }
-    });
-  </script>
+  <script src="./window-manager.js"></script>
 </body>
 </html>

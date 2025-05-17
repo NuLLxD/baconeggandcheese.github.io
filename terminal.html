@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Copland Terminal</title>
+  <link rel="stylesheet" href="./style.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Courier New', monospace;
+      color: #ccc7ff;
+      background: #000;
+      height: 100%;
+      overflow: hidden;
+    }
+    #terminal {
+      position: absolute;
+      inset: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      background: #1a1a1a;
+      border: 1px solid #ccc7ff;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(204, 199, 255, 0.2);
+      overflow-y: auto;
+    }
+    .output-line {
+      white-space: pre-wrap;
+    }
+    .command-line {
+      display: flex;
+      white-space: nowrap;
+    }
+    .command-line span {
+      margin-right: 5px;
+    }
+    .command-input {
+      color: #ccc7ff;
+      background: none;
+      border: none;
+      font: inherit;
+      outline: none;
+      flex-grow: 1;
+    }
+    a {
+      color: #aaaaff;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div id="terminal"></div>
+
+  <script>
+    const terminal = document.getElementById("terminal");
+
+    const manPages = {
+      git: `Name\n\tgit - <a href="https://github.com/NuLLxD" target="_blank">Go to My GitHub profile</a>\n\nDescription\n\tDisplay a brief overview of my GitHub projects.\n`,
+      linkedin: `Name\n\tlinkedin - <a href="https://www.linkedin.com/in/christopher-rodriguez-a4022a116/" target="_blank">Go to My LinkedIn profile</a>\n\nDescription\n\tGo directly to my LinkedIn profile.\n`,
+      resume: `Name\n\tresume - Display my Resume.\n`
+    };
+
+    const projects = `total 2\n-rw-r--r-- 1 user user 2048 Jan 01 2025 <a href="https://github.com/NuLLxD/Palworld-NetCrack" target="_blank">Palworld NetCrack</a>\n\tAn example of reverse engineering, code injection, and Direct3D hooking. Written in C++.\n\n-rw-r--r-- 1 user user 1024 Jan 01 2025 <a href="https://github.com/NuLLxD/Proton.SH" target="_blank">Proton.SH</a>\n\tBash script to manage Steam Proton environments and simplify executing Windows executables.`;
+
+    const commands = {
+      git: () => typeOutput(projects),
+      linkedin: () => window.open("https://www.linkedin.com/in/christopher-rodriguez-a4022a116/", "_blank"),
+      resume: () => window.open("./resume.pdf") // placeholder
+    };
+
+    function appendOutput(content) {
+      const div = document.createElement("div");
+      div.className = "output-line";
+      div.innerHTML = content;
+      terminal.insertBefore(div, promptLine);
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    async function typeOutput(text) {
+      const lines = text.split("\n");
+      for (const line of lines) {
+        await new Promise((r) => setTimeout(r, 50));
+        appendOutput(line);
+      }
+    }
+
+    let promptLine;
+    function createPrompt() {
+      promptLine = document.createElement("div");
+      promptLine.className = "command-line";
+      const prompt = document.createElement("span");
+      prompt.textContent = "$";
+      const input = document.createElement("input");
+      input.className = "command-input";
+      promptLine.appendChild(prompt);
+      promptLine.appendChild(input);
+      terminal.appendChild(promptLine);
+      terminal.scrollTop = terminal.scrollHeight;
+      input.focus();
+
+      input.addEventListener("keydown", async (e) => {
+        if (e.key === "Enter") {
+          const cmd = input.value.trim();
+          const log = document.createElement("div");
+          log.className = "output-line";
+          log.textContent = `$ ${cmd}`;
+          terminal.insertBefore(log, promptLine);
+
+          input.disabled = true;
+          input.style.display = "none";
+
+          if (cmd.startsWith("man -a ")) {
+            const topic = cmd.split(" ")[2];
+            if (manPages[topic]) {
+              await typeOutput(manPages[topic]);
+            } else {
+              await typeOutput(`No manual entry for ${topic}`);
+            }
+          } else if (commands[cmd]) {
+            await commands[cmd]();
+          } else {
+            await typeOutput(`command not found: ${cmd}`);
+          }
+          createPrompt();
+        }
+      });
+    }
+    // Formatting is fucked otherwise
+    async function initTerminal() {
+      const intro = `$ man -a git\n\nName\n\tgit - <a href="https://github.com/NuLLxD" target="_blank">My GitHub profile</a>\n\nDescription\n\tDisplay a brief overview of my GitHub projects.\n\n\n$ man -a linkedin\n\nName\n\tlinkedin - <a href="https://www.linkedin.com/in/christopher-rodriguez-a4022a116/" target="_blank">My LinkedIn profile</a>\n\nDescription\n\tGo directly to my LinkedIn profile.\n\n\n$ man -a resume\n\nName\n\tresume - Display most recent work experience\n`;
+      await typeOutput(intro);
+      createPrompt();
+    }
+
+    initTerminal();
+  </script>
+</body>
+</html>
