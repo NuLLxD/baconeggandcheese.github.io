@@ -47,5 +47,13 @@
   <div id="window-container"></div>
 
   <script src="./window-manager.js"></script>
+  <script>
+  window.addEventListener("DOMContentLoaded", () => {
+    if (!sessionStorage.getItem("welcomeShown")) {
+      createCoplandWindow("Welcome", "welcome.html");
+      sessionStorage.setItem("welcomeShown", "true");
+    }
+  });
+</script>
 </body>
 </html>

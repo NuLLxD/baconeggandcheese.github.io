@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Welcome</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 40px 20px;
+      font-family: 'Century Schoolbook L', sans-serif;
+      background: transparent;
+      color: #000;
+      text-align: center;
+    }
+
+    .pc-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .pc-image {
+      width: 140px;
+      height: 140px;
+      /* border-radius: 50%;
+      overflow: hidden; */
+      margin-bottom: 20px;
+      /* border: 4px solid #fff; */
+      /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); */
+    }
+
+    .pc-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .welcome {
+      margin-top: 20px;
+      font-size: 16px;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .welcome {
+        font-size: 15px;
+        text-align: justify;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="pc-container">
+    <div class="pc-image">
+      <img src="./pc.png"/>
+    </div>
+    <div class="welcome">
+      <p>Welcome to <strong>baconeggandcheese</strong>! Interested in some interactive fun? Open the terminal!</p>
+      <p>This webpage was designed to be similar to a retro 90's and early 2000's computer experience.</p>
+      <p>Please take to the time to browse through the menu bar at the top for quick links and poke around!</p>
+    </div>
+  </div>
+</body>
+</html>

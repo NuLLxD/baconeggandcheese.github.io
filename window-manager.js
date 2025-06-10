@@ -19,6 +19,8 @@ function createCoplandWindow(title, url) {
   // event listener for focus
   win.addEventListener("mousedown", () => {
     win.style.zIndex = topZIndex++;
+    win.style.left = `${(window.innerWidth - 500) / 2}px`;
+    win.style.top = `${(window.innerHeight - 400) / 2}px`;
   });
 
   container.appendChild(win);
