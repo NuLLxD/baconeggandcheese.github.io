@@ -1,0 +1,21 @@
+name: Update EVE Data
+on:
+  schedule:
+    - cron: '*/1 * * * *' # Every 1 minutes
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Script
+        run: |
+          python main.py
+      - name: Commit changes
+        run: |
+          git config --global user.name 'EVE-Bot'
+          git config --global user.email 'bot@eve.com'
+          git add fw_battlefield_data.json
+          git commit -m "Auto-update ESI data" || exit 0
+          git push
