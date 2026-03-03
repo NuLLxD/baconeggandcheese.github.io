@@ -1,21 +1,30 @@
-name: Update EVE Data
+name: EVE Monitor Sync
 on:
   schedule:
-    - cron: '*/1 * * * *' # Every 1 minutes
+    - cron: '*/5 * * * *' # Every 5 minutes
   workflow_dispatch:
 
 jobs:
-  build:
+  update-data:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Run Script
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run Monitor
+        run: python eve/main.py
+
+      - name: Commit and Push
         run: |
-          python eve/main.py
-      - name: Commit changes
-        run: |
-          git config --global user.name 'EVE-Bot'
-          git config --global user.email 'bot@eve.com'
-          git add fw_battlefield_data.json
-          git commit -m "Auto-update ESI data" || exit 0
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add eve/fw_battlefield_data.json
+          git commit -m "Update EVE BF Data [skip ci]" || exit 0
           git push
