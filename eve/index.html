@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EVE Battlefield Monitor</title>
+    <style>
+        body {
+            background: url('image_637ebc.png') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+        }
+        .monitor-box {
+            background: rgba(40, 44, 52, 0.85);
+            padding: 30px;
+            border-radius: 20px;
+            width: 450px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .timer-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .available { color: #00ff88; text-shadow: 0 0 10px #00ff88; }
+        .cooldown { color: #ffaa00; }
+        .recent-log {
+            margin-top: 20px;
+            font-size: 0.8em;
+            color: #aaa;
+            text-align: left;
+            border-top: 1px solid #444;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="monitor-box">
+        <h2>Battlefield Monitor</h2>
+        <div id="timer-container">Loading ESI Data...</div>
+        <div class="recent-log" id="log-container"></div>
+    </div>
+
+    <script>
+        async function updateTimers() {
+            const response = await fetch('fw_battlefield_data.json');
+            const data = await response.json();
+            const container = document.getElementById('timer-container');
+            const logContainer = document.getElementById('log-container');
+            const now = new Date();
+
+            let html = '';
+            const factions = ["Caldari", "Minmatar", "Amarr", "Gallente"];
+
+            factions.forEach(fac => {
+                const timerStr = data.timers[fac];
+                let status = '<span class="available">AVAILABLE</span>';
+                
+                if (timerStr) {
+                    const target = new Date(timerStr);
+                    if (target > now) {
+                        const diff = new Date(target - now);
+                        const hours = String(diff.getUTCHours()).padStart(2, '0');
+                        const mins = String(diff.getUTCMinutes()).padStart(2, '0');
+                        status = `<span class="cooldown">COOLDOWN (${hours}:${mins})</span>`;
+                    }
+                }
+                html += `<div class="timer-row"><span>${fac}</span> ${status}</div>`;
+            });
+
+            container.innerHTML = html;
+            logContainer.innerHTML = "<b>Recent:</b><br>" + data.recent_spikes.reverse().join('<br>');
+        }
+        setInterval(updateTimers, 10000);
+        updateTimers();
+    </script>
+</body>
+</html>
