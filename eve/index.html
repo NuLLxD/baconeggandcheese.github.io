@@ -2,10 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVE Battlefield Monitor</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
         body {
-            background: #000 url('image_637ebc.png') no-repeat center center fixed;
+            background: #000 url('./image_637ebc.png') no-repeat center center fixed;
             background-size: cover;
             display: flex;
             justify-content: center;
@@ -15,66 +18,126 @@
             font-family: 'Inter', sans-serif;
             color: #fff;
         }
+
         .glass-panel {
-            background: rgba(45, 45, 50, 0.7);
-            backdrop-filter: blur(12px);
+            background: rgba(30, 30, 35, 0.8);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             padding: 40px;
             border-radius: 30px;
             width: 440px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.9);
+            border: 1px solid rgba(255,255,255,0.1);
             text-align: center;
         }
+
+        h2 {
+            margin-top: 0;
+            letter-spacing: 4px;
+            font-size: 1.1em;
+            font-weight: 800;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 20px;
+            color: rgba(255,255,255,0.9);
+        }
+
         .faction-row {
             border-bottom: 1px solid rgba(255,255,255,0.05);
-            padding: 15px 0;
+            padding: 18px 0;
         }
+
         .faction-header {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             font-size: 1.1em;
             font-weight: 600;
         }
+
         .system-name {
             display: block;
             text-align: right;
             font-size: 0.75em;
             color: #888;
-            margin-top: 4px;
+            margin-top: 6px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
         }
-        .ready { color: #00ffaa; text-shadow: 0 0 10px rgba(0,255,170,0.5); }
+
+        .ready { 
+            color: #00ffaa; 
+            text-shadow: 0 0 10px rgba(0,255,170,0.4);
+            animation: pulse 2s infinite;
+        }
+
         .cooldown { color: #ff9d00; }
-        .stale-warning { font-size: 0.7em; color: #ff4444; margin-top: 15px; font-weight: bold; }
+        
+        .waiting { color: #555; font-size: 0.9em; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .stale-warning { 
+            font-size: 0.75em; 
+            color: #ff4444; 
+            margin-top: 20px; 
+            font-weight: bold;
+            background: rgba(255,0,0,0.1);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        #sync-indicator {
+            font-size: 10px;
+            color: #777;
+            margin-top: 25px;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
 
     <div class="glass-panel">
-        <h2 style="margin-top:0; letter-spacing: 3px; font-size: 1.2em; border-bottom: 1px solid #444; padding-bottom: 15px;">WARZONE STATUS</h2>
-        <div id="display">Loading intelligence...</div>
+        <h2>Battlefield Monitor</h2>
+        <div id="display">Initializing systems...</div>
         <div id="staleness"></div>
+        <div id="sync-indicator">FETCHING ESI DATA...</div>
     </div>
 
     <script>
+        function formatAge(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            if (m === 0) return `${s}s`;
+            return `${m}m ${s}s`;
+        }
+
         async function update() {
             try {
                 const res = await fetch('fw_battlefield_data.json');
+                if (!res.ok) throw new Error("Data file not found");
+                
                 const data = await res.json();
                 const now = new Date();
                 const lastUpdate = new Date(data.last_updated);
                 
-                const isStale = (now - lastUpdate) > (3 * 60 * 60 * 1000);
+                const diffSeconds = Math.floor((now - lastUpdate) / 1000);
+                const isStale = diffSeconds > (3 * 60 * 60); // 3 hours
+                
                 const factions = ["Caldari", "Minmatar", "Amarr", "Gallente"];
                 let html = "";
 
                 factions.forEach(f => {
-                    let status = '<span class="ready">BF AVAILABLE</span>';
+                    let status = '<span class="waiting">WAITING FOR SPAWN</span>';
                     let systemInfo = '';
                     
-                    if (!isStale && data.timers[f]) {
+                    if (!isStale && data.timers && data.timers[f]) {
                         const openTime = new Date(data.timers[f]);
+                        
                         if (openTime > now) {
                             const diff = Math.floor((openTime - now) / 1000);
                             const h = Math.floor(diff / 3600);
@@ -82,9 +145,13 @@
                             const s = diff % 60;
                             status = `<span class="cooldown">OPENS IN ${h}h ${m}m ${s}s</span>`;
                             
-                            // Show which system triggered the current cooldown
                             if (data.last_systems && data.last_systems[f]) {
                                 systemInfo = `<span class="system-name">Last BF: ${data.last_systems[f]}</span>`;
+                            }
+                        } else {
+                            status = '<span class="ready">BF AVAILABLE</span>';
+                            if (data.last_systems && data.last_systems[f]) {
+                                systemInfo = `<span class="system-name" style="color:rgba(0,255,170,0.5)">Zone: ${data.last_systems[f]}</span>`;
                             }
                         }
                     }
@@ -92,7 +159,7 @@
                     html += `
                         <div class="faction-row">
                             <div class="faction-header">
-                                <span>${f}</span>
+                                <span>${f.toUpperCase()}</span>
                                 ${status}
                             </div>
                             ${systemInfo}
@@ -103,14 +170,17 @@
                 
                 if (isStale) {
                     document.getElementById('staleness').innerHTML = 
-                        `<div class="stale-warning">⚠️ MONITOR OFFLINE<br>Data older than 3 hours</div>`;
+                        `<div class="stale-warning">⚠️ MONITOR OFFLINE (AGE: ${formatAge(diffSeconds)})</div>`;
                 } else {
-                    const timeString = lastUpdate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    document.getElementById('staleness').innerHTML = 
-                        `<div style="font-size: 10px; color: #555; margin-top: 15px;">LAST SYNC: ${timeString}</div>`;
+                    document.getElementById('staleness').innerHTML = "";
+                    const timeString = lastUpdate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    document.getElementById('sync-indicator').innerHTML = 
+                        `SYNCED: ${timeString} EVE | DATA AGE: ${formatAge(diffSeconds)}`;
                 }
 
-            } catch (e) { console.error("Sync error", e); }
+            } catch (e) { 
+                document.getElementById('display').innerHTML = `<span class="waiting">SYNCING DATA...</span>`;
+            }
         }
 
         setInterval(update, 1000);

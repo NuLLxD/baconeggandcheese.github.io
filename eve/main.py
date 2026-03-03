@@ -3,7 +3,6 @@ import json
 import os
 from datetime import datetime, timedelta, timezone
 
-# Pathing relative to the script location (the 'eve' folder)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(BASE_DIR, "fw_battlefield_data.json")
 ESI_BASE = "https://esi.evetech.net/latest"
@@ -15,23 +14,28 @@ def load_data():
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, 'r') as f:
-                return json.load(f)
+                d = json.load(f)
+                # Ensure structure exists
+                for key in ["vp_history", "timers", "last_systems", "recent_spikes", "active_battlefields"]:
+                    if key not in d: d[key] = {} if "history" in key or "timers" in key or "systems" in key or "active" in key else []
+                return d
         except: pass
-    return {"vp_history": {}, "timers": {}, "last_systems": {}, "recent_spikes": [], "last_updated": ""}
+    return {"vp_history": {}, "timers": {}, "last_systems": {}, "recent_spikes": [], "active_battlefields": {}, "last_updated": ""}
 
 def main():
     data = load_data()
     now_utc = datetime.now(timezone.utc)
     
     try:
-        # Fetch current FW state
         response = requests.get(f"{ESI_BASE}/fw/systems/", timeout=10).json()
-        
-        # Name mapping
         ids = [sys['solar_system_id'] for sys in response]
         name_res = requests.post(f"{ESI_BASE}/universe/names/", json=ids).json()
         name_map = {item['id']: item['name'] for item in name_res}
 
+        # Clear active flags to re-scan
+        # We only mark them 'Active' if they are currently in the 3-hour window
+        # or if the window has passed but no new spike has occurred.
+        
         for sys in response:
             if sys.get('contested') != 'frontline': continue
             
@@ -41,18 +45,21 @@ def main():
             fname = FACTIONS.get(fid, "Unknown")
             sname = name_map.get(int(sid), sid)
 
-            # Detection Logic
             if sid in data["vp_history"]:
-                if vp - data["vp_history"][sid] >= BF_VP_THRESHOLD:
-                    # Update Cooldown Timer
+                diff = vp - data["vp_history"][sid]
+                
+                # BATTLEFIELD DETECTED (Spike)
+                if diff >= BF_VP_THRESHOLD:
+                    # Set the 3-hour cooldown
                     data["timers"][fname] = (now_utc + timedelta(hours=3)).isoformat()
-                    # Store the specific system name
+                    # Store the system
                     data["last_systems"][fname] = sname
+                    # This faction is now in COOLDOWN, not "Available"
+                    data["active_battlefields"][fname] = False 
                     
-                    # Log it
                     entry = f"[{now_utc.strftime('%H:%M')}] BF: {sname} ({fname})"
                     data["recent_spikes"].append(entry)
-                    if len(data["recent_spikes"]) > 5: data["recent_spikes"].pop(0)
+                    if len(data["recent_spikes"]) > 10: data["recent_spikes"].pop(0)
 
             data["vp_history"][sid] = vp
 
