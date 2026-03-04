@@ -74,6 +74,16 @@
         
         .waiting { color: #555; font-size: 0.9em; }
 
+        #activity-log {
+            margin-top: 20px;
+            font-size: 0.7em;
+            color: #aaa;
+            text-align: left;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 15px;
+            line-height: 1.6;
+        }
+
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -104,6 +114,9 @@
     <div class="glass-panel">
         <h2>Battlefield Monitor</h2>
         <div id="display">Initializing systems...</div>
+        
+        <div id="activity-log"></div>
+
         <div id="staleness"></div>
         <div id="sync-indicator">FETCHING ESI DATA...</div>
     </div>
@@ -118,12 +131,15 @@
 
         async function update() {
             try {
-                const res = await fetch('fw_battlefield_data.json');
+                // Points to the folder where the EC2 bot pushes data
+                const res = await fetch('eve/fw_battlefield_data.json');
                 if (!res.ok) throw new Error("Data file not found");
                 
                 const data = await res.json();
                 const now = new Date();
-                const lastUpdate = new Date(data.last_updated);
+                
+                // Matches the key used in the Python script
+                const lastUpdate = new Date(data.last_update);
                 
                 const diffSeconds = Math.floor((now - lastUpdate) / 1000);
                 const isStale = diffSeconds > (3 * 60 * 60); // 3 hours
@@ -144,15 +160,8 @@
                             const m = Math.floor((diff % 3600) / 60);
                             const s = diff % 60;
                             status = `<span class="cooldown">OPENS IN ${h}h ${m}m ${s}s</span>`;
-                            
-                            if (data.last_systems && data.last_systems[f]) {
-                                systemInfo = `<span class="system-name">Last BF: ${data.last_systems[f]}</span>`;
-                            }
                         } else {
                             status = '<span class="ready">BF AVAILABLE</span>';
-                            if (data.last_systems && data.last_systems[f]) {
-                                systemInfo = `<span class="system-name" style="color:rgba(0,255,170,0.5)">Zone: ${data.last_systems[f]}</span>`;
-                            }
                         }
                     }
                     
@@ -162,12 +171,23 @@
                                 <span>${f.toUpperCase()}</span>
                                 ${status}
                             </div>
-                            ${systemInfo}
                         </div>`;
                 });
 
                 document.getElementById('display').innerHTML = html;
+
+                // --- Activity Log Logic ---
+                let activityHtml = "<div style='font-weight:800; margin-bottom:8px; color:#666; letter-spacing:1px;'>RECENT ACTIVITY</div>";
+                if (data.recent_spikes && data.recent_spikes.length > 0) {
+                    data.recent_spikes.slice().reverse().forEach(log => {
+                        activityHtml += `<div style="margin-bottom:4px; font-family: monospace;">${log}</div>`;
+                    });
+                } else {
+                    activityHtml += "<div>Scanning for spikes...</div>";
+                }
+                document.getElementById('activity-log').innerHTML = activityHtml;
                 
+                // --- Staleness / Sync Indicator ---
                 if (isStale) {
                     document.getElementById('staleness').innerHTML = 
                         `<div class="stale-warning">⚠️ MONITOR OFFLINE (AGE: ${formatAge(diffSeconds)})</div>`;
