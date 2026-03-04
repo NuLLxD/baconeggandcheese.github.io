@@ -132,7 +132,7 @@
         async function update() {
             try {
                 // Points to the folder where the EC2 bot pushes data
-                const res = await fetch('eve/fw_battlefield_data.json');
+                const res = await fetch('fw_battlefield_data.json');
                 if (!res.ok) throw new Error("Data file not found");
                 
                 const data = await res.json();
